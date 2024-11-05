@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, request, jsonify
 import os
 import cv2
@@ -11,56 +12,27 @@ app = Flask(__name__)
 # Logger instance
 logger = Logger()
 
-# Define threshold for comparison using VGG-Face
-threshold = verification.find_threshold(model_name="VGG-Face", distance_metric="cosine")
+def verify(image1, image2):
+    result = DeepFace.verify(image1, image2)
+    return result
 
-# Path to the dataset
-db_path = "deepface/tests/dataset"
+def get_image_path_userid(userId):
+    url = f"http://82.97.243.112:8080/api/image/get-one?userId={userId}"
+    response = requests.get(url)
+    return response.json().get("uploadPath")
 
+def get_image_path_imageid(imageId):
+    url = f"http://82.97.243.112:8080/api/image/get-one-id?imageId={imageId}"
+    response = requests.get(url)
+    return response.json().get("uploadPath")
 @app.route('/verify', methods=['POST'])
 def verify_face():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image file provided"}), 400
-    
-    # Get the image from the request
-    file = request.files['image']
-    
-    # Save the image temporarily to disk
-    img_path = os.path.join("uploads", file.filename)
-    file.save(img_path)
+    userId = request.json['userId']
+    imageId = request.json['imageId']
+    image1 = get_image_path_userid(userId)
+    image2 = get_image_path_imageid(imageId)
+    response = verify(image1, image2)
+    return jsonify(response)
 
-    try:
-        # Find the face in the dataset
-        dfs = DeepFace.find(img_path=img_path, db_path=db_path, silent=True)
-
-        if len(dfs) == 0:
-            return jsonify({"match": False}), 200
-        
-        # Check each DataFrame (there can be multiple for different faces)
-        for df in dfs:
-            if isinstance(df, pd.DataFrame):
-                # Verify if the closest match distance is below the threshold
-                if df["distance"].values[0] < threshold:
-                    logger.info("✅ Face matched with distance below threshold.")
-                    return jsonify({"match": True}), 200
-
-        # If no match is found
-        logger.info("❌ No match found.")
-        return jsonify({"match": False}), 200
-    
-    except Exception as e:
-        logger.error(f"Error occurred: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(img_path):
-            os.remove(img_path)
-
-# Start the Flask app
 if __name__ == '__main__':
-    # Make sure the 'uploads' folder exists to store temp images
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
-    
     app.run(host='0.0.0.0', port=9001, debug=True)
