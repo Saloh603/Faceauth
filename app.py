@@ -19,12 +19,14 @@ def verify(image1, image2):
 def get_image_path_userid(userId):
     url = f"http://82.97.243.112:8080/api/image/get-one?userId={userId}"
     response = requests.get(url)
-    return response.json().get("uploadPath")
+    return f"/root\\Prob24\\ProjectFiles\\upload_folder{response.json().get('uploadPath')}"
 
 def get_image_path_imageid(imageId):
     url = f"http://82.97.243.112:8080/api/image/get-one-id?imageId={imageId}"
     response = requests.get(url)
-    return response.json().get("uploadPath")
+    return f"/root\\Prob24\\ProjectFiles\\upload_folder{response.json().get("uploadPath")}"
+
+
 @app.route('/verify', methods=['POST'])
 def verify_face():
     userId = request.json['userId']
