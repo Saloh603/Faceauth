@@ -21,14 +21,14 @@ def get_image_path_userid(userId):
     response = requests.get(url)
     upload_path = response.json().get('uploadPath')
     # Ensure the correct path by using os.path.join
-    return os.path.join("'root\Prob24\ProjectFiles\upload_folder'", upload_path)
+    return os.path.join("'root\Prob24\ProjectFiles\\upload_folder'", upload_path)
 
 def get_image_path_imageid(imageId):
     url = f"http://82.97.243.112:8080/api/image/get-one-id?imageId={imageId}"
     response = requests.get(url)
     upload_path = response.json().get('uploadPath')
     # Ensure the correct path by using os.path.join
-    return os.path.join("'root\Prob24\ProjectFiles\upload_folder'", upload_path)
+    return os.path.join("'root\Prob24\ProjectFiles\\upload_folder'", upload_path)
 
 
 @app.route('/verify', methods=['POST'])
